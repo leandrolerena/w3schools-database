@@ -1,0 +1,7 @@
+POST http://localhost:3000/products
+Content-Type: application/json
+
+{
+    "ProductName": "Feusi Product 2",
+    "CategoryID": "1243"
+}

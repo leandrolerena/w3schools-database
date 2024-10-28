@@ -2,6 +2,7 @@
 import mysql from 'mysql2/promise';
 import express from 'express';
 import bodyParser from 'body-parser';
+import cors from 'cors';
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -24,6 +25,8 @@ app.use(bodyParser.json());
 app.get('/', (req, res) => {
     res.json({message: 'This is a simple REST API for the w3schools database'});
 })
+
+app.use(cors({ origin: 'http://localhost:3001' })); // Allow requests from your React app
 
 const relations = [
     {
@@ -68,7 +71,7 @@ for (let relation of relations) {
             res.json(rows);
         } catch (error) {
             console.error(error);
-            res.status(500).send('Internal Server Error:');
+            res.status(500).send(error);
         }
     })
 
@@ -86,7 +89,7 @@ for (let relation of relations) {
 
         } catch (error) {
             console.error(error);
-            res.status(500).send('Internal Server Error:');
+            res.status(500).send(error);
         }}
     )
 
@@ -105,7 +108,7 @@ for (let relation of relations) {
 
         } catch (error) {
             console.error(error);
-            res.status(500).send('Internal Server Error:');
+            res.status(500).send(error);
         }
     })
 
@@ -126,7 +129,7 @@ for (let relation of relations) {
 
         } catch (error) {
             console.error(error);
-            res.status(500).send('Internal Server Error:');
+            res.status(500).send(error);
         }
 
     })
@@ -144,7 +147,7 @@ for (let relation of relations) {
 
         } catch (error) {
             console.error(error);
-            res.status(500).send('Internal Server Error:');
+            res.status(500).send(error);
         }
     })
 }
