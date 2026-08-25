@@ -1,18 +1,2 @@
 {
-    "sqltools.connections": [
-        {
-            "mysqlOptions": {
-                "authProtocol": "default"
-            },
-            "previewLimit": 50,
-            "server": "localhost",
-            "port": 3309,
-            "driver": "MySQL",
-            "name": "feusi-w3schools",
-            "group": "feusi",
-            "database": "w3schools",
-            "username": "feusi",
-            "password": "feusi"
-        }
-    ]
 }
