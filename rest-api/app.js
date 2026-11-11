@@ -21,6 +21,13 @@ app.listen(port, () => {
 
 app.use(bodyParser.json());
 
+app.use((error, req, res, next) => {
+    if (error.type !== 'entity.parse.failed') {
+        return next(error);
+    }
+    res.status(400).json({error: `Invalid JSON in request body: ${error.message}`});
+});
+
 app.get('/', (req, res) => {
     res.json({message: 'This is a simple REST API for the w3schools database'});
 })
@@ -40,7 +47,7 @@ const relations = [
     },
     {
         name: "order_details",
-        id: "OrderDetailIDs"
+        id: "OrderDetailID"
     },
     {
         name: "orders",
@@ -60,91 +67,56 @@ const relations = [
     }
 ]
 
+function sendError(res, error) {
+    console.error(error);
+    if (error.sqlMessage) {
+        return res.status(400).json({error: error.sqlMessage});
+    }
+    res.status(500).json({error: 'Internal Server Error'});
+}
+
+async function respondWithQuery(res, query, values) {
+    try {
+        const [rows] = await connection.query(query, values);
+        res.json(rows);
+    } catch (error) {
+        sendError(res, error);
+    }
+}
+
+function requireJsonBody(req, res, next) {
+    if (Object.keys(req.body ?? {}).length > 0) {
+        return next();
+    }
+    res.status(400).json({
+        error: "Request body is empty or not JSON. Add the header 'Content-Type: application/json' and an empty line before the JSON body."
+    });
+}
+
 for (let relation of relations) {
-    app.get(`/${relation.name}`, async (req, res) => {
-        // Get all rows of relation
-        try {
-            const [rows] =  await connection.query(`SELECT * FROM ${relation.name}`);
-            res.json(rows);
-        } catch (error) {
-            console.error(error);
-            res.status(500).send('Internal Server Error:');
-        }
-    })
-
-    app.get(`/${relation.name}/:id`, async (req, res) => {
-        // Get row by id of relation
-
-        const id = req.params.id;
-
-        try {
-            const [rows] = await connection.query(
-                `SELECT * FROM ${relation.name} WHERE ${relation.id} = ?`,
-                [id]
-            );
-            res.json(rows);
-
-        } catch (error) {
-            console.error(error);
-            res.status(500).send('Internal Server Error:');
-        }}
+    app.get(`/${relation.name}`, (req, res) =>
+        respondWithQuery(res, `SELECT * FROM ${relation.name}`)
     )
 
-    app.post(`/${relation.name}`, async (req, res) => {
-        // create new entry in relation
+    app.get(`/${relation.name}/:id`, (req, res) =>
+        respondWithQuery(res, `SELECT * FROM ${relation.name} WHERE ${relation.id} = ?`, [req.params.id])
+    )
 
-        try {
-            const query = `INSERT INTO ${relation.name} (${Object.keys(req.body).join(', ')}) VALUES (${Object.keys(req.body).map(_ => '?')})`;
-            console.log(query)
-
-            const [rows] = await connection.query(
-                query,
-                Object.values(req.body)
-            );
-            res.json(rows);
-
-        } catch (error) {
-            console.error(error);
-            res.status(500).send('Internal Server Error:');
-        }
+    app.post(`/${relation.name}`, requireJsonBody, (req, res) => {
+        const columns = Object.keys(req.body);
+        const query = `INSERT INTO ${relation.name} (${columns.join(', ')}) VALUES (${columns.map(_ => '?')})`;
+        console.log(query)
+        return respondWithQuery(res, query, Object.values(req.body));
     })
 
-    app.patch(`/${relation.name}/:id`, async (req, res) => {
-        // update fields set in request body for relation
-
-        const id = req.params.id;
-
-        try {
-            const query = `UPDATE ${relation.name} SET ${Object.keys(req.body).map(k => k + " = ?").join(', ')} WHERE ${relation.id} = ${id}`;
-            console.log(query)
-
-            const [rows] = await connection.query(
-                query,
-                Object.values(req.body)
-            );
-            res.json(rows);
-
-        } catch (error) {
-            console.error(error);
-            res.status(500).send('Internal Server Error:');
-        }
-
+    app.patch(`/${relation.name}/:id`, requireJsonBody, (req, res) => {
+        const assignments = Object.keys(req.body).map(k => k + " = ?").join(', ');
+        const query = `UPDATE ${relation.name} SET ${assignments} WHERE ${relation.id} = ?`;
+        console.log(query)
+        return respondWithQuery(res, query, [...Object.values(req.body), req.params.id]);
     })
 
-    app.delete(`/${relation.name}/:id`, async (req, res) => {
-        // delete by id for relation
-        
-        const id = req.params.id;
-        try {
-            const [rows] = await connection.query(
-                `DELETE FROM ${relation.name} WHERE ${relation.id} = ?`,
-                [id]
-            );
-            res.json(rows);
-
-        } catch (error) {
-            console.error(error);
-            res.status(500).send('Internal Server Error:');
-        }
-    })
+    app.delete(`/${relation.name}/:id`, (req, res) =>
+        respondWithQuery(res, `DELETE FROM ${relation.name} WHERE ${relation.id} = ?`, [req.params.id])
+    )
 }
