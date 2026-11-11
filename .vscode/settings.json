@@ -1,2 +1,16 @@
 {
+    "dbcode.connections": [
+        {
+            "connectionId": "feusi-w3schools",
+            "name": "feusi-w3schools",
+            "driver": "mysql",
+            "connectionType": "host",
+            "host": "127.0.0.1",
+            "port": 3309,
+            "database": "w3schools",
+            "username": "feusi",
+            "password": "feusi",
+            "savePassword": "yes"
+        }
+    ]
 }
