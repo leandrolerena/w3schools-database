@@ -1,0 +1,18 @@
+{
+  "name": "sql-runner",
+  "version": "1.0.0",
+  "description": "Runs the SQL blocks of the course slides against the w3schools MySQL",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "start": "node server.mjs",
+    "test": "node --test"
+  },
+  "license": "ISC",
+  "dependencies": {
+    "mysql2": "3.24.6"
+  }
+}

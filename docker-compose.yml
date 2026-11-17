@@ -8,7 +8,7 @@ services:
     environment:
       MYSQL_USER: feusi
       MYSQL_PASSWORD: feusi
-      MYSQL_ROOT_PASSWORD: root
+      MYSQL_ROOT_PASSWORD: &mysql-root-password root
       MYSQL_DATABASE: w3schools
     volumes:
       - ./data/mysql-arm:/var/lib/mysql
@@ -28,3 +28,15 @@ services:
       - DB_HOST=w3schools-db
       - DB_PORT=3306
 
+  sql-runner:
+    build: ./sql-runner
+    restart: always
+    depends_on:
+      - w3schools-db
+    ports:
+      # Only reachable from this computer: the slides in its browser call it
+      - 127.0.0.1:3001:3001
+    environment:
+      MYSQL_HOST: w3schools-db
+      MYSQL_PORT: "3306"
+      MYSQL_ROOT_PASSWORD: *mysql-root-password
