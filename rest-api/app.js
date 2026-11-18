@@ -6,7 +6,7 @@ import bodyParser from 'body-parser';
 const app = express();
 const port = process.env.PORT || 3000;
 
-const connection =  await mysql.createConnection({
+const pool = mysql.createPool({
     host: process.env.DB_HOST || '127.0.0.1',
     port: process.env.DB_PORT || 3309,
     user: process.env.DB_USER || 'feusi',
@@ -77,7 +77,7 @@ function sendError(res, error) {
 
 async function respondWithQuery(res, query, values) {
     try {
-        const [rows] = await connection.query(query, values);
+        const [rows] = await pool.query(query, values);
         res.json(rows);
     } catch (error) {
         sendError(res, error);
